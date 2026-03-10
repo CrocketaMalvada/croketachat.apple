@@ -22,10 +22,11 @@ jobs:
         run: flutter create --platforms=ios .
 
       - name: 🔐 Inyectar Permisos de Apple (Magia pura)
+        # El "|| true" hace que si el permiso ya existe, no tire error y siga adelante felizmente.
         run: |
-          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'CroketaChat necesita la cámara para fotos efímeras.'" ios/Runner/Info.plist
-          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'CroketaChat necesita acceso a la galería para tu foto de perfil.'" ios/Runner/Info.plist
-          /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'CroketaChat necesita el micrófono para enviar notas de voz.'" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'CroketaChat necesita la cámara para fotos efímeras.'" ios/Runner/Info.plist || true
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'CroketaChat necesita acceso a la galería para tu foto de perfil.'" ios/Runner/Info.plist || true
+          /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'CroketaChat necesita el micrófono para enviar notas de voz.'" ios/Runner/Info.plist || true
 
       - name: 📦 Instalar dependencias
         run: flutter pub get
