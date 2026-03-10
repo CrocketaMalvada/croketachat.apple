@@ -18,14 +18,12 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: 🍏 Generar y renombrar archivos base de iOS
+      - name: 🍏 Generar archivos base de iOS
         run: |
-          # Borramos la carpeta ios antigua si existe para evitar conflictos
+          # Borramos cualquier rastro previo de iOS para empezar limpios
           rm -rf ios
-          # Creamos el proyecto con el nombre correcto
-          flutter create --platforms=ios --org com.croketa chatpremium .
-          # Movemos el proyecto para que coincida con lo que espera el build
-          mv chatpremium/ios ios
+          # Creamos el proyecto directamente en la raíz con el ID correcto
+          flutter create --platforms=ios --org com.croketa.chatpremium .
 
       - name: 🔐 Inyectar Permisos de Apple (Magia pura)
         # El "|| true" hace que si el permiso ya existe, no tire error y siga adelante felizmente.
