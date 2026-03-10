@@ -31,7 +31,6 @@ jobs:
         run: flutter pub get
 
       - name: 🚀 Compilar iOS
-        # Flutter build ios ya hace el pod install automáticamente por nosotros
         run: flutter build ios --release --no-codesign
 
       - name: 🎁 Empaquetar a formato .ipa
