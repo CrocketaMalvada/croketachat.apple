@@ -1,95 +1,57 @@
-name: Build iOS Premium
+name: Build iOS IPA
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-ios:
-    runs-on: macos-latest
+    runs-on: macos-15-arm64
 
     steps:
-      - name: 📥 Clonar el código
-        uses: actions/checkout@v4
+      - name: 📥 Clonar repositorio
+        uses: actions/checkout@v3
+        with:
+          repository: CrocketaMalvada/croketachat.apple
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🐦 Instalar Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
-
-      - name: 🍏 Generar archivos base de iOS
-        run: |
-          # 1. Borramos la carpeta antigua de iOS
-          rm -rf ios
-
-          # 2. Creamos el proyecto limpio en el directorio actual
-          flutter create --platforms=ios --org com.croketa .
-
-          # 3. Buscar y reemplazar 'skychat_app' por 'chatpremium' en todo el proyecto
-          find . -type f \
-            ! -path './.git/*' \
-            ! -name '*.png' ! -name '*.jpg' ! -name '*.jpeg' \
-            ! -name '*.gif' ! -name '*.ico' ! -name '*.zip' \
-            ! -name '*.ipa' ! -name '*.a' ! -name '*.o' \
-            -exec bash -c 'LC_ALL=C sed -i "" "s/skychat_app/chatpremium/g" "$1" 2>/dev/null || true' _ {} \;
-
-          # 4. Aseguramos el Bundle Identifier correcto en el archivo Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.croketa.chatpremium" ios/Runner/Info.plist
-
-      - name: 🔐 Inyectar Permisos de Apple (Magia pura)
-        run: |
-          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'CroketaChat necesita la cámara para fotos efímeras.'" ios/Runner/Info.plist || true
-          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'CroketaChat necesita acceso a la galería para tu foto de perfil.'" ios/Runner/Info.plist || true
-          /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'CroketaChat necesita el micrófono para enviar notas de voz.'" ios/Runner/Info.plist || true
-          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.croketa.chatpremium" ios/Runner/Info.plist
-
-      - name: 🔧 Desactivar firma de código en Xcode (clave del éxito)
-        run: |
-          # Eliminar cualquier DEVELOPMENT_TEAM que haya quedado
-          LC_ALL=C sed -i "" \
-            's/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = "";/g' \
-            ios/Runner.xcodeproj/project.pbxproj
-
-          # Forzar firma manual y desactivar gestión automática
-          LC_ALL=C sed -i "" \
-            's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' \
-            ios/Runner.xcodeproj/project.pbxproj
-
-          # Vaciar identidad de firma
-          LC_ALL=C sed -i "" \
-            's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' \
-            ios/Runner.xcodeproj/project.pbxproj
-
-          LC_ALL=C sed -i "" \
-            's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' \
-            ios/Runner.xcodeproj/project.pbxproj
-
-          # Vaciar provisioning profile
-          LC_ALL=C sed -i "" \
-            's/PROVISIONING_PROFILE_SPECIFIER = [^;]*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' \
-            ios/Runner.xcodeproj/project.pbxproj
-
-          echo "✅ Firma de código desactivada correctamente"
-          grep "DEVELOPMENT_TEAM\|CODE_SIGN" ios/Runner.xcodeproj/project.pbxproj | head -10
+          channel: stable
+          architecture: ARM64
 
       - name: 📦 Instalar dependencias
         run: flutter pub get
 
-      - name: 🚀 Compilar iOS
+      - name: 🔧 Parchear Xcode signing en pbxproj
+        run: |
+          PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
+          # Forzar firma manual sin equipo
+          LC_ALL=C sed -i "" 's/DEVELOPMENT_TEAM = [A-Z0-9]*;/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
+          LC_ALL=C sed -i "" 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
+          LC_ALL=C sed -i "" 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' "$PBXPROJ"
+          LC_ALL=C sed -i "" 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' "$PBXPROJ"
+          echo "=== Verificando cambios ==="
+          grep -E "DEVELOPMENT_TEAM|CODE_SIGN" "$PBXPROJ" | head -20
+
+      - name: 🍏 Pod install
+        run: pod install
+        working-directory: ios
+
+      - name: 🚀 Compilar iOS (sin firma)
         run: flutter build ios --release --no-codesign
 
-      - name: 🎁 Empaquetar .ipa para Sideloadly
+      - name: 🎁 Empaquetar .ipa
         run: |
-          mkdir -p Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/Runner.app
-          zip -r CroketaChat.ipa Payload/
+          mkdir -p build/ios/ipa/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/ipa/Payload/
+          cd build/ios/ipa
+          zip -r ../../../CroketaChat.ipa Payload
 
-      - name: ☁️ Subir la App lista para instalar
+      - name: ☁️ Subir IPA
         uses: actions/upload-artifact@v4
         with:
-          name: CroketaChat-iOS-App
-          path: CroketaChat.ipa
-        with:
-          name: CroketaChat-iOS-App
+          name: CroketaChat
           path: CroketaChat.ipa
