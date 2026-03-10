@@ -108,6 +108,11 @@ void main() async {
 
   const InitializationSettings initSettings = InitializationSettings(
     android: AndroidInitializationSettings('@mipmap/launcher_icon'),
+    iOS: DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    ),
   );
   await flutterLocalNotificationsPlugin.initialize(
     initSettings,
@@ -117,11 +122,18 @@ void main() async {
         notificationTapBackground(r);
     },
   );
+  // Pedir permisos en Android
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
       >()
       ?.requestNotificationsPermission();
+  // Pedir permisos en iOS
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin
+      >()
+      ?.requestPermissions(alert: true, badge: true, sound: true);
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? savedUser = prefs.getString('user_data');
