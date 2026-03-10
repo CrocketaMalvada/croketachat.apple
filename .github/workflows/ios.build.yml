@@ -27,7 +27,7 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'CroketaChat necesita la cámara para fotos efímeras.'" ios/Runner/Info.plist || true
           /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'CroketaChat necesita acceso a la galería para tu foto de perfil.'" ios/Runner/Info.plist || true
           /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'CroketaChat necesita el micrófono para enviar notas de voz.'" ios/Runner/Info.plist || true
-
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.croketa.chatpremium" ios/Runner/Info.plist
       - name: 📦 Instalar dependencias
         run: flutter pub get
 
