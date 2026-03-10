@@ -27,7 +27,13 @@ jobs:
           flutter create --platforms=ios --org com.croketa .
 
           # 3. Buscar y reemplazar 'skychat_app' por 'chatpremium' en todo el proyecto
-          find . -type f -exec sed -i '' 's/skychat_app/chatpremium/g' {} +
+          # LC_ALL=C evita el error "illegal byte sequence" con archivos UTF-8/binarios en macOS
+          find . -type f \
+            ! -path './.git/*' \
+            ! -name '*.png' ! -name '*.jpg' ! -name '*.jpeg' \
+            ! -name '*.gif' ! -name '*.ico' ! -name '*.zip' \
+            ! -name '*.ipa' ! -name '*.a' ! -name '*.o' \
+            -exec bash -c 'LC_ALL=C sed -i "" "s/skychat_app/chatpremium/g" "$1" 2>/dev/null || true' _ {} \;
 
           # 4. Aseguramos el Bundle Identifier correcto en el archivo Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.croketa.chatpremium" ios/Runner/Info.plist
