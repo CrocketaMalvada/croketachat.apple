@@ -27,7 +27,6 @@ jobs:
           flutter create --platforms=ios --org com.croketa .
 
           # 3. Buscar y reemplazar 'skychat_app' por 'chatpremium' en todo el proyecto
-          # LC_ALL=C evita el error "illegal byte sequence" con archivos UTF-8/binarios en macOS
           find . -type f \
             ! -path './.git/*' \
             ! -name '*.png' ! -name '*.jpg' ! -name '*.jpeg' \
@@ -45,6 +44,35 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'CroketaChat necesita el micrófono para enviar notas de voz.'" ios/Runner/Info.plist || true
           /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.croketa.chatpremium" ios/Runner/Info.plist
 
+      - name: 🔧 Desactivar firma de código en Xcode (clave del éxito)
+        run: |
+          # Eliminar cualquier DEVELOPMENT_TEAM que haya quedado
+          LC_ALL=C sed -i "" \
+            's/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = "";/g' \
+            ios/Runner.xcodeproj/project.pbxproj
+
+          # Forzar firma manual y desactivar gestión automática
+          LC_ALL=C sed -i "" \
+            's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' \
+            ios/Runner.xcodeproj/project.pbxproj
+
+          # Vaciar identidad de firma
+          LC_ALL=C sed -i "" \
+            's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' \
+            ios/Runner.xcodeproj/project.pbxproj
+
+          LC_ALL=C sed -i "" \
+            's/CODE_SIGN_IDENTITY = "iPhone Developer";/CODE_SIGN_IDENTITY = "";/g' \
+            ios/Runner.xcodeproj/project.pbxproj
+
+          # Vaciar provisioning profile
+          LC_ALL=C sed -i "" \
+            's/PROVISIONING_PROFILE_SPECIFIER = [^;]*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' \
+            ios/Runner.xcodeproj/project.pbxproj
+
+          echo "✅ Firma de código desactivada correctamente"
+          grep "DEVELOPMENT_TEAM\|CODE_SIGN" ios/Runner.xcodeproj/project.pbxproj | head -10
+
       - name: 📦 Instalar dependencias
         run: flutter pub get
 
@@ -59,6 +87,9 @@ jobs:
 
       - name: ☁️ Subir la App lista para instalar
         uses: actions/upload-artifact@v4
+        with:
+          name: CroketaChat-iOS-App
+          path: CroketaChat.ipa
         with:
           name: CroketaChat-iOS-App
           path: CroketaChat.ipa
