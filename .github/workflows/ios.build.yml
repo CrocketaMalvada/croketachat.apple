@@ -1,7 +1,7 @@
 name: Build iOS Premium
 
 on:
-  workflow_dispatch: # Nos permite lanzar la compilación a mano cuando queramos
+  workflow_dispatch:
   push:
     branches: [ "main" ]
 
@@ -18,14 +18,20 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: 📦 Instalar dependencias de Flutter
+      - name: 🍏 Generar archivos base de iOS
+        run: flutter create --platforms=ios .
+
+      - name: 🔐 Inyectar Permisos de Apple (Magia pura)
+        run: |
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'CroketaChat necesita la cámara para fotos efímeras.'" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'CroketaChat necesita acceso a la galería para tu foto de perfil.'" ios/Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'CroketaChat necesita el micrófono para enviar notas de voz.'" ios/Runner/Info.plist
+
+      - name: 📦 Instalar dependencias
         run: flutter pub get
 
-      - name: 🍎 Instalar dependencias de Apple (CocoaPods)
-        run: pod install
-        working-directory: ios
-
-      - name: 🚀 Compilar iOS (Unsigned)
+      - name: 🚀 Compilar iOS
+        # Flutter build ios ya hace el pod install automáticamente por nosotros
         run: flutter build ios --release --no-codesign
 
       - name: 🎁 Empaquetar a formato .ipa
@@ -34,7 +40,7 @@ jobs:
           mv build/ios/iphoneos/Runner.app Payload/
           zip -r CroketaChat_Premium.ipa Payload
 
-      - name: ☁️ Subir la App para descargar
+      - name: ☁️ Subir la App lista para instalar
         uses: actions/upload-artifact@v3
         with:
           name: CroketaChat-iOS-App
