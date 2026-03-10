@@ -20,10 +20,18 @@ jobs:
 
       - name: 🍏 Generar archivos base de iOS
         run: |
-          # Borramos cualquier rastro previo de iOS para empezar limpios
+          # 1. Borramos la carpeta antigua de iOS
           rm -rf ios
-          # Creamos el proyecto directamente en la raíz con el ID correcto
-          flutter create --platforms=ios --org com.croketa.chatpremium .
+          
+          # 2. Creamos el proyecto limpio
+          flutter create --platforms=ios --org com.croketa chatpremium .
+          
+          # 3. Solución Nuclear: Buscar y reemplazar 'skychat_app' por 'chatpremium' en todo el proyecto
+          # Esto busca en cada archivo del repositorio y cambia el nombre rebelde
+          find . -type f -exec sed -i '' 's/skychat_app/chatpremium/g' {} +
+          
+          # 4. Aseguramos el Bundle Identifier correcto en el archivo Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.croketa.chatpremium" ios/Runner/Info.plist
 
       - name: 🔐 Inyectar Permisos de Apple (Magia pura)
         # El "|| true" hace que si el permiso ya existe, no tire error y siga adelante felizmente.
