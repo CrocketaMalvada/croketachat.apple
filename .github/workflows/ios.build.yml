@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: 📥 Clonar el código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 🐦 Instalar Flutter
         uses: subosito/flutter-action@v2
@@ -40,7 +40,7 @@ jobs:
           zip -r CroketaChat_Premium.ipa Payload
 
       - name: ☁️ Subir la App lista para instalar
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: CroketaChat-iOS-App
           path: CroketaChat_Premium.ipa
