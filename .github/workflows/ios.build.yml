@@ -22,14 +22,13 @@ jobs:
         run: |
           # 1. Borramos la carpeta antigua de iOS
           rm -rf ios
-          
-          # 2. Creamos el proyecto limpio
-          flutter create --platforms=ios --org com.croketa chatpremium .
-          
-          # 3. Solución Nuclear: Buscar y reemplazar 'skychat_app' por 'chatpremium' en todo el proyecto
-          # Esto busca en cada archivo del repositorio y cambia el nombre rebelde
+
+          # 2. Creamos el proyecto limpio en el directorio actual
+          flutter create --platforms=ios --org com.croketa .
+
+          # 3. Buscar y reemplazar 'skychat_app' por 'chatpremium' en todo el proyecto
           find . -type f -exec sed -i '' 's/skychat_app/chatpremium/g' {} +
-          
+
           # 4. Aseguramos el Bundle Identifier correcto en el archivo Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.croketa.chatpremium" ios/Runner/Info.plist
 
@@ -40,6 +39,7 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'CroketaChat necesita acceso a la galería para tu foto de perfil.'" ios/Runner/Info.plist || true
           /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'CroketaChat necesita el micrófono para enviar notas de voz.'" ios/Runner/Info.plist || true
           /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.croketa.chatpremium" ios/Runner/Info.plist
+
       - name: 📦 Instalar dependencias
         run: flutter pub get
 
