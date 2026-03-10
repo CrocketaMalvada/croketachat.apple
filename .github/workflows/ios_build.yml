@@ -28,13 +28,17 @@ jobs:
       - name: 🔧 Parchear Xcode signing en pbxproj
         run: |
           PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
-          # Forzar firma manual sin equipo
-          LC_ALL=C sed -i "" 's/DEVELOPMENT_TEAM = [A-Z0-9]*;/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
-          LC_ALL=C sed -i "" 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
-          LC_ALL=C sed -i "" 's/CODE_SIGN_IDENTITY = "Apple Development";/CODE_SIGN_IDENTITY = "";/g' "$PBXPROJ"
-          LC_ALL=C sed -i "" 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' "$PBXPROJ"
-          echo "=== Verificando cambios ==="
-          grep -E "DEVELOPMENT_TEAM|CODE_SIGN" "$PBXPROJ" | head -20
+          echo "=== ANTES del parche ==="
+          grep -E "DEVELOPMENT_TEAM|CODE_SIGN|PROVISIONING" "$PBXPROJ" || echo "No se encontraron líneas"
+          
+          # Parche ampliado - captura cualquier valor
+          LC_ALL=C sed -i "" 's/DEVELOPMENT_TEAM = .*;/DEVELOPMENT_TEAM = "";/g' "$PBXPROJ"
+          LC_ALL=C sed -i "" 's/CODE_SIGN_STYLE = .*;/CODE_SIGN_STYLE = Manual;/g' "$PBXPROJ"
+          LC_ALL=C sed -i "" 's/CODE_SIGN_IDENTITY = .*;/CODE_SIGN_IDENTITY = "";/g' "$PBXPROJ"
+          LC_ALL=C sed -i "" 's/PROVISIONING_PROFILE_SPECIFIER = .*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' "$PBXPROJ"
+          
+          echo "=== DESPUÉS del parche ==="
+          grep -E "DEVELOPMENT_TEAM|CODE_SIGN|PROVISIONING" "$PBXPROJ" || echo "No se encontraron líneas"
 
       - name: 🍏 Pod install
         run: pod install
